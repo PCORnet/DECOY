@@ -108,3 +108,24 @@ head(age_dist)
 with(subset(age_dist, age < 88),
      plot(age, pat_qty))
 ```
+
+
+## Synthesize patients
+
+```{r synpat}
+
+synpat <- function(qty, age_dist) {
+  pat <- data.frame(patient_num=1:qty)
+  pat$age <- with(age_dist, sample(age, qty, prob=pat_qty))
+  pat
+  }
+
+spat <- synpat(100, age_dist)
+head(spat)
+```
+
+## Save patients in CSV format
+
+```{r write_patients}
+write.csv(spat, file="patient.csv", row.names=FALSE)
+```
