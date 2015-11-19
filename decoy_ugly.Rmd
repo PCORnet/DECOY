@@ -1,6 +1,12 @@
 Ugly DECOY
 ==========
 
+
+```{r echo=FALSE}
+
+options(width=180)
+```
+
 ## Access to the Babel Clinical Data Warehouse
 
 ```{r babel.access,echo=FALSE}
@@ -54,14 +60,19 @@ Then we can get a connection and run SQL queries:
 myAccess = babel.access(myCredsFile='babel_creds.R')
 cdw = myAccess()
 dbGetQuery(cdw, "select 1+1")
+```
 
+The indirection thru `myAccess` encapsulates your credentials from your
+exploratory computing session.
+
+`makePreparedQuery` is a convenience function for using bind parameters.
+
+```{r}
 cdwq <- makePreparedQuery(cdw)
 cdwq("select 2 + 2")
 cdwq("select $1 + 5", p1=3)
 ```
 
-The indirection thru `myAccess` encapsulates your credentials from your
-exploratory computing session.
 
 ## Basic Demographics
 
@@ -82,7 +93,12 @@ dem_tables <- table_access[grep('demog', table_access$c_name, ignore.case=TRUE),
 head(dem_tables)
 ```
 
+
+### Age distribution
+
 Next, we summarize age distribution:
+
+*TODO: more than just KUMC*
 
 ```{r summary_nominal}
 
@@ -110,19 +126,39 @@ with(subset(age_dist, age < 88),
 ```
 
 
+### Sex distribution
+
+*TODO: standard sex codes*
+
+```{r}
+sex_dist <- summary_nominal(dem_tables[grep('KUMC', dem_tables$c_name),]$c_table_name, 'Demographics\\Gender\\_')
+
+last_char <- function(s) substr(s, nchar(s), nchar(s))
+sex_dist$sex <- last_char(sex_dist$c_basecode)
+sex_dist
+```
+
+
+```{r}
+with(sex_dist, barplot(pat_qty, names.arg=sex))
+```
+
+
 ## Synthesize patients
 
 ```{r synpat}
 
-synpat <- function(qty, age_dist) {
+synpat <- function(qty, age_dist, sex_dist) {
   pat <- data.frame(patient_num=1:qty)
-  pat$age <- with(age_dist, sample(age, qty, prob=pat_qty))
+  pat$age <- with(age_dist, sample(age, qty, prob=pat_qty, replace=TRUE))
+  pat$sex <- with(sex_dist, sample(sex, qty, prob=pat_qty, replace=TRUE))
   pat
   }
 
-spat <- synpat(100, age_dist)
+spat <- synpat(100, age_dist, sex_dist)
 head(spat)
 ```
+
 
 ## Save patients in CSV format
 
