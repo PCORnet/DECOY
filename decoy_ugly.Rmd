@@ -1,0 +1,37 @@
+Ugly DECOY
+==========
+
+## Database Access
+
+```{r echo=FALSE}
+library(DBI)
+library(RPostgreSQL)
+
+babel.access <- function(myCredsFile) {
+  creds <- source(myCredsFile)$value
+  function() {
+    dbConnect(dbDriver("PostgreSQL"), dbname="i2b2", host="localhost",
+              user=creds$user, password=creds$password, port=creds$port)
+    }
+  }
+```
+
+Create a `babel_creds.R` file a la:
+
+```
+list(user="me", password="sekret", port=5000)
+```
+
+where 5000 is the local end of an ssh tunnel to babel's postgres port (5432).
+
+Then we can get a connection and run SQL queries:
+
+```{r}
+myAccess = babel.access(myCredsFile='babel_creds.R')
+cdw = myAccess()
+dbGetQuery(cdw, "select 1+1")
+```
+
+The indirection thru `myAccess` encapsulates your credentials from your
+exploratory computing session.
+
