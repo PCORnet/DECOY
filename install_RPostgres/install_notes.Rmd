@@ -1,0 +1,17 @@
+Modern Postgres Driver
+======================
+
+```{r}
+# Evidently RPostgreSQL has gone fallow and doesn't give us what we'd like in the way of bind parameters.
+# Hadley Wickam and co are on the case with RPostgres, but it's a bit bleeding edge.
+
+# Installing devtools was a bit of a circus:
+# devtools requires rversions requires xml2 requires Rcpp >= 0.11.4.6
+# fortunately, Rcpp in CRAN is at 0.12.2
+devtools::install_github("RcppCore/Rcpp")
+devtools::install_github("rstats-db/DBI")
+
+# copy from Makevars in this directory to ~/.R/Makevars
+# to help the configure script use pkg-config to find stuff.
+devtools::install_github("rstats-db/RPostgres")
+```

@@ -1,0 +1,4 @@
+# cf 6.3.3 Customizing package compilation
+# https://cran.r-project.org/doc/manuals/r-devel/R-admin.html#Customizing-package-compilation
+PKG_CPPFLAGS=$(shell pkg-config libpq --cflags)
+PKG_LIBS=$(shell pkg-config libpq --libs)
