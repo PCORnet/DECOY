@@ -1,16 +1,40 @@
 Ugly DECOY
 ==========
 
-## Database Access
+## Access to the Babel Clinical Data Warehouse
 
-```{r echo=FALSE}
+```{r babel.access,echo=FALSE}
+# see install_RPostgres.Rmd for bleeding-edge details
 library(DBI)
-library(RPostgreSQL)
+library(RPostgres)
+
+# based on DBI::getQuery and RPostgres::dbSendQuery
+# https://github.com/rstats-db/DBI/blob/7a0ad76dea21a846cee62f67108ab8e8b7d60a49/R/DBConnection.R#L133
+makePreparedQuery <- function(conn) {
+  function(statement, ...) {
+    params = list(...)
+
+    rs <- dbSendQuery(conn, statement)
+    on.exit(dbClearResult(rs))
+    
+    if (length(params) > 0) {
+      dbBind(rs, params)
+      }
+    
+    df <- dbFetch(rs, n = -1, ...)
+    if (!dbHasCompleted(rs)) {
+      warning("Pending rows", call. = FALSE)
+      }
+    
+    df
+    }
+  }
+
 
 babel.access <- function(myCredsFile) {
   creds <- source(myCredsFile)$value
   function() {
-    dbConnect(dbDriver("PostgreSQL"), dbname="i2b2", host="localhost",
+    dbConnect(RPostgres::Postgres(), dbname="i2b2", host="localhost",
               user=creds$user, password=creds$password, port=creds$port)
     }
   }
@@ -26,12 +50,61 @@ where 5000 is the local end of an ssh tunnel to babel's postgres port (5432).
 
 Then we can get a connection and run SQL queries:
 
-```{r}
+```{r cdw}
 myAccess = babel.access(myCredsFile='babel_creds.R')
 cdw = myAccess()
 dbGetQuery(cdw, "select 1+1")
+
+cdwq <- makePreparedQuery(cdw)
+cdwq("select 2 + 2")
+cdwq("select $1 + 5", p1=3)
 ```
 
 The indirection thru `myAccess` encapsulates your credentials from your
 exploratory computing session.
 
+## Basic Demographics
+
+There are quite a few metadata tables:
+
+```{r}
+table_access <- cdwq(
+  "select distinct c_name, c_table_name, c_fullname, c_totalnum
+  from i2b2metadata.table_access")
+
+nrow(table_access)
+```
+
+Let's pick out the ones relevant to demographics:
+
+```{r}
+dem_tables <- table_access[grep('demog', table_access$c_name, ignore.case=TRUE), ]
+head(dem_tables)
+```
+
+Next, we summarize age distribution:
+
+```{r summary_nominal}
+
+summary_nominal <- function(table, path_pattern) {
+  cdwq(
+    sub('&&TABLE', table,
+        "select coalesce(sum(c_totalnum), 0) pat_qty, c_fullname, c_basecode
+        from i2b2metadata.&&TABLE meta
+        where meta.c_fullname like ('%' || $1 || '%') escape '$'
+        and length(c_basecode) > 0
+        group by c_fullname, c_basecode"),
+    p1=path_pattern)
+  }
+
+age_dist <- summary_nominal(dem_tables[grep('KUMC', dem_tables$c_name),]$c_table_name, 'Demographics\\Age\\_')
+age_dist$age <- as.numeric(sub('DEM|AGE:', '', age_dist$c_basecode, fixed=TRUE))
+head(age_dist)
+```
+
+*something odd happens above 88 yrs old; let's leave that aside for the plot...*
+
+```{r age.plot}
+with(subset(age_dist, age < 88),
+     plot(age, pat_qty))
+```
