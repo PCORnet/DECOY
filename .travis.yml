@@ -5,6 +5,7 @@ script:
 - Rscript -e "library(knitr); knit('decoy_ugly.Rmd')"
 
 r_github_packages:
+- hadley/devtools#936
 - RcppCore/Rcpp
 - rstats-db/DBI
 - rstats-db/RPostgres
