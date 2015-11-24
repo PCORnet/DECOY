@@ -37,19 +37,36 @@ makePreparedQuery <- function(conn) {
   }
 
 
-babel.access <- function(myCredsFile) {
-  creds <- source(myCredsFile)$value
+
+regparts <- function(needle, pattern) {
+  m <- regexpr(pattern, needle, perl=TRUE)
+  capture <- list(names=attr(m, 'capture.names'),
+                  start=attr(m, 'capture.start'),
+                  length=attr(m, 'capture.length'))
+  x <- list()
+  for (i in 1:length(capture$names)) {
+    x[[capture$names[i]]] <- substr(needle, capture$start[i], capture$start[i] + capture$length[i] - 1)
+  }
+  x
+}
+
+
+babel.access <- function(env_key='CDW_URL',
+                         getenv=Sys.getenv) {
+  creds <- regparts(getenv(env_key),
+         '^postgres://(?P<user>[^:]+):(?P<password>[^@]+)@(?P<host>[^:]+):(?P<port>\\d+)/(?P<dbname>.+)')
+
   function() {
-    dbConnect(RPostgres::Postgres(), dbname="i2b2", host="localhost",
-              user=creds$user, password=creds$password, port=creds$port)
+    dbConnect(RPostgres::Postgres(),
+              user=creds$user, password=creds$password, host=creds$host, port=creds$port, dbname=creds$dbname)
     }
   }
 ```
 
-Create a `babel_creds.R` file a la:
+Put your credentials in the environment a la:
 
-```
-list(user="me", password="sekret", port=5000)
+```{r}
+Sys.setenv(CDW_URL='postgres://me:lemmein@babel:5432/i2b2')
 ```
 
 where 5000 is the local end of an ssh tunnel to babel's postgres port (5432).
@@ -57,7 +74,7 @@ where 5000 is the local end of an ssh tunnel to babel's postgres port (5432).
 Then we can get a connection and run SQL queries:
 
 ```{r cdw}
-myAccess = babel.access(myCredsFile='babel_creds.R')
+myAccess = babel.access('CDW_URL')
 cdw = myAccess()
 dbGetQuery(cdw, "select 1+1")
 ```
