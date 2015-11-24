@@ -1,0 +1,14 @@
+language: r
+sudo: required
+
+script:
+- Rscript -e "library(knitr); knit('decoy_ugly.Rmd')"
+
+r_github_packages:
+- RcppCore/Rcpp
+- rstats-db/DBI
+- rstats-db/RPostgres
+
+env:
+  global:
+    secure: aySL9wJzR8nYSxFCbA9TAZpdRh9Zgn7IvI36lDWECJL+xYFxa8QrV+L/JbQ0VyqFMiI+NFZlRJZ1Tx0XYYgbobP7b2JHSOwf5U7y5c4glztZBCiffn0JpnVBgQp7ukru+xa33HKn2+ySmoTQoUH+q+dxu/OS0Di0JIUIsxz2MnE8+NwSVTFyHeLgSt1nMZId0WOp7IDJlugZyoq94hx7aCgBGCGVyt5Wxc+kUIASIW4Qzc85SsJ3SPa7i8xC4rRaqP5CG5SK7Vxr1P1I3FOE4NuAD/FxNHLz+C83C3nVuWJwRciI03VVX7QrJ2uL3zyBzSmC0fu8pB+I3hAvW6RWe9V0gRb2z7q8B9d3Bvc7StzgQdElXP8iGyC0jTC6z0XqHnFag3QQfwhNl8jUVvR0eIsZZgWVLRIWGqOtgX0Efr/ZtolkfAvjkaUqhuWKS2C0b6DDPcUsME9BL5ZWqH3CbYleYWezeUt+dgZCwfXfktrE5bp6ZjsJbY8fKDgq4JzR7IX1e0orXAZp2a+Vijmw5oI8VYpcAEa9jq9u0U2MCImk19tGXR7lgB07wF7/l3JIE4xOPFwCUQ5/q8ajHpxm29nXlKnIA5tgExLG0Lb38Sk+vMn5SIseOz6VfkuBsnoY7e4CDVIzz6G1E8QJjLTVFRC0BWvn3VzwNlc8lRV4ZI0=
