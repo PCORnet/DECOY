@@ -1,0 +1,10 @@
+Package: DECOY
+Title: Data Entrepreneur Clinical Observables Yardstick
+Version: 0.0.0.9000
+Authors@R: person("Dan", "Connolly", email = "dconnolly@kumc.edu", role = c("aut", "cre"))
+Description: Data Entrepreneur Clinical Observables Yardstick
+  synthetic data for labs, meds, etc.
+  a clinical equivalent to DeSYN PUF Files
+Depends: R (>= 3.1.3)
+License: Apache License, Version 2.0
+LazyData: true
